@@ -4,3 +4,8 @@
 *.swp
 *.swo
 \#*#
+
+# python
+*.pyc
+*pyo
+__pycache__/
