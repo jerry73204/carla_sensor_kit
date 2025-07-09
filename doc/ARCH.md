@@ -146,14 +146,53 @@ carla_sensor_kit_launch/
 │   │   └── sensor_kit.param.yaml
 │   └── dummy_diag_publisher/
 │       └── sensor_kit.param.yaml
-└── data/
-    └── traffic_light_camera.yaml
+├── data/
+│   └── traffic_light_camera.yaml
+└── scripts/
+    ├── sensor_config_loader.py      # Unified configuration loader
+    └── simple_spawn_integration.py  # Integration example
 
 carla_sensor_kit_description/
 └── config/
-    ├── sensor_kit_calibration.yaml
-    ├── sensors_calibration.yaml
+    ├── sensor_kit_calibration.yaml  # Individual sensor poses
+    ├── sensors_calibration.yaml     # Base sensor kit transform
     └── imu_corrector.param.yaml
+```
+
+## Sensor Configuration Integration
+
+The sensor configuration system ensures consistency between CARLA spawning and Autoware:
+
+```
+┌─────────────────────────────┐
+│ sensors_calibration.yaml    │
+│ ┌─────────────────────────┐ │
+│ │ base_link → sensor_kit  │ │
+│ └──────────┬──────────────┘ │
+└────────────┼────────────────┘
+             │
+┌────────────▼────────────────┐
+│ sensor_kit_calibration.yaml │
+│ ┌─────────────────────────┐ │
+│ │ sensor_kit → sensors    │ │
+│ └──────────┬──────────────┘ │
+└────────────┼────────────────┘
+             │
+┌────────────▼────────────────┐
+│  sensor_config_loader.py    │
+│ ┌─────────────────────────┐ │
+│ │ • Load YAML configs     │ │
+│ │ • Convert ROS → CARLA   │ │
+│ │ • Provide transforms    │ │
+│ └──────────┬──────────────┘ │
+└────────────┼────────────────┘
+             │
+      ┌──────┴──────┐
+      ▼             ▼
+┌───────────┐ ┌─────────────┐
+│  CARLA    │ │  Autoware   │
+│  Spawner  │ │  URDF/TF    │
+└───────────┘ └─────────────┘
 ```
 
 ## Key Design Decisions
@@ -182,3 +221,9 @@ carla_sensor_kit_description/
 - Static transforms in URDF/xacro files
 - Dynamic calibration in YAML configurations
 - Enables runtime calibration updates without rebuilding
+
+### 6. Unified Sensor Configuration
+- Single source of truth for sensor poses in YAML files
+- Automatic coordinate system conversion (ROS → CARLA)
+- Python sensor_config_loader.py provides transforms to CARLA spawner
+- Eliminates duplication between spawner and sensor kit configurations

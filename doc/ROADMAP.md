@@ -10,19 +10,36 @@ This document outlines the development phases for the CARLA sensor kit launch pr
 - [x] Design documentation (ARCH.md, DESIGN.md)
 - [x] Define CARLA ROS topic specifications
 - [x] Design vehicle spawner script architecture
+- [x] Create sensor kit launch files
+  - [x] Implement topic remapping for each sensor type
+  - [x] Add launch parameters for actor names
+  - [x] Configure sensor transforms in YAML
+- [x] Implement unified sensor configuration
+  - [x] Create sensor_config_loader.py
+  - [x] Eliminate pose duplication between spawner and YAML
+  - [x] Add coordinate system conversion (ROS → CARLA)
+- [x] Create helper scripts
+  - [x] carla.rs for server management
+  - [x] ros_env.sh for environment setup
 
 ### In Progress
-- [ ] Implement carla_spawner Python package
-  - [ ] Create Rye project structure
-  - [ ] Implement spawn_vehicle.py script
-  - [ ] Add command-line argument parsing
-  - [ ] Test with CARLA 0.10.0
+- [ ] Test complete data flow from CARLA to Autoware
+- [ ] Validate sensor data quality and timing
 
-### To Do
-- [ ] Create sensor kit launch files
-  - [ ] Implement topic remapping for each sensor type
-  - [ ] Add launch parameters for actor names
-  - [ ] Test data flow from CARLA to Autoware topics
+### Completed Recently
+- [x] Integrate sensor config loader with CARLA spawner
+  - [x] Design integration approach
+  - [x] Create simple_spawn_integrated.py with YAML configs
+  - [x] Test sensor placement accuracy
+- [x] Implement workflow automation script
+  - [x] Design workflow architecture (WORKFLOW.md)
+  - [x] Implement run_carla_autoware.py
+  - [x] Add health monitoring and status display
+- [x] Implement testing framework
+  - [x] Create test directory structure
+  - [x] Set up pytest and launch_testing infrastructure
+  - [x] Configure test coverage reporting
+  - [x] Create initial test files for topic remapping and sensor poses
 
 ## Phase 2: Sensor Integration
 **Goal**: Full sensor suite working with accurate data transformation
@@ -32,22 +49,31 @@ This document outlines the development phases for the CARLA sensor kit launch pr
 - [ ] Configure ring outlier filter
 - [ ] Add distortion correction
 - [ ] Validate coordinate frame transformations
+- [ ] Test topic remapping for LiDAR data
 
 ### Camera Pipeline
 - [ ] Enable camera launch file
 - [ ] Configure image transport
 - [ ] Add camera info publishing
 - [ ] Test multiple camera positions
+- [ ] Validate camera topic remapping
 
 ### IMU Integration
 - [ ] Configure IMU corrector node
 - [ ] Validate noise parameters
 - [ ] Test data rates and latency
+- [ ] Test IMU topic remapping and data integrity
 
 ### GNSS Integration
 - [ ] Configure GNSS poser node
 - [ ] Implement coordinate conversions
 - [ ] Add UTM zone handling
+- [ ] Test GNSS topic remapping and coordinate accuracy
+
+### Testing Integration
+- [ ] Implement topic remapping tests for all sensors
+- [ ] Create sensor pose validation tests
+- [ ] Add sensor data quality tests
 
 ## Phase 3: Calibration & Transforms
 **Goal**: Accurate sensor positioning and calibration
@@ -57,6 +83,10 @@ This document outlines the development phases for the CARLA sensor kit launch pr
 - [ ] Add sensor calibration file generator
 - [ ] Create calibration validation tools
 - [ ] Document calibration procedures
+- [ ] Testing tasks:
+  - [ ] Implement TF tree consistency tests
+  - [ ] Add transform accuracy validation
+  - [ ] Create calibration regression tests
 
 ## Phase 4: Multi-Vehicle Support
 **Goal**: Support multiple vehicles in same simulation
@@ -66,6 +96,10 @@ This document outlines the development phases for the CARLA sensor kit launch pr
 - [ ] Add vehicle fleet configuration file
 - [ ] Create traffic scenario scripts
 - [ ] Test with 5+ simultaneous vehicles
+- [ ] Testing tasks:
+  - [ ] Multi-vehicle topic isolation tests
+  - [ ] Performance tests with multiple vehicles
+  - [ ] Resource usage monitoring tests
 
 ## Phase 5: Advanced Features
 **Goal**: Production-ready features and optimizations
@@ -75,12 +109,20 @@ This document outlines the development phases for the CARLA sensor kit launch pr
 - [ ] Add configurable data decimation
 - [ ] Optimize pointcloud processing pipeline
 - [ ] Profile and reduce latency
+- [ ] Testing tasks:
+  - [ ] Latency measurement tests
+  - [ ] Throughput performance tests
+  - [ ] CPU/memory usage profiling
 
 ### Monitoring & Diagnostics
 - [ ] Integrate diagnostic aggregator
 - [ ] Add sensor health monitoring
 - [ ] Create visualization dashboard
 - [ ] Implement data recording tools
+- [ ] Testing tasks:
+  - [ ] Sensor dropout detection tests
+  - [ ] Health monitoring validation
+  - [ ] Diagnostic message tests
 
 ### Additional Sensors
 - [ ] Add radar sensor support
@@ -91,12 +133,46 @@ This document outlines the development phases for the CARLA sensor kit launch pr
 ## Phase 6: Testing & Validation
 **Goal**: Comprehensive testing framework
 
+### Core Testing Implementation
 - [ ] Create unit tests for spawner script
+  - [ ] Test sensor configuration loading
+  - [ ] Test coordinate system conversions
+  - [ ] Test vehicle spawning logic
 - [ ] Add integration tests for launch files
+  - [ ] Test launch file parameter parsing
+  - [ ] Test node lifecycle management
+  - [ ] Test conditional launching
 - [ ] Implement sensor data validation
-- [ ] Create performance benchmarks
-- [ ] Add CI/CD pipeline
-- [ ] Document test procedures
+  - [ ] Create data quality metrics
+  - [ ] Add range and rate validation
+  - [ ] Implement data consistency checks
+
+### Test Framework Setup
+- [ ] Create test directory structure as per DESIGN_TEST.md
+- [ ] Configure pytest and launch_testing
+- [ ] Set up test fixtures and mock data
+- [ ] Implement test data recording/playback
+
+### Automated Testing
+- [ ] Topic remapping test suite
+  - [ ] LiDAR remapping validation
+  - [ ] Camera remapping validation
+  - [ ] IMU/GNSS remapping validation
+- [ ] Sensor pose validation suite
+  - [ ] Static transform tests
+  - [ ] TF tree consistency tests
+  - [ ] Dynamic transform tests
+- [ ] Performance test suite
+  - [ ] Latency measurements
+  - [ ] Throughput validation
+  - [ ] Resource usage monitoring
+
+### CI/CD Integration
+- [ ] Add GitHub Actions workflow
+- [ ] Configure automated test execution
+- [ ] Add test coverage reporting
+- [ ] Create performance regression detection
+- [ ] Document test procedures and guidelines
 
 ## Phase 7: Documentation & Training
 **Goal**: Complete user documentation and examples

@@ -35,6 +35,9 @@ The CARLA sensor kit serves the following purposes:
 ### 1. Simulation Setup
 ```
 CARLA Simulator → Create Vehicle Actor → Attach Sensor Actors
+                                              ↓
+                                    sensor_config_loader.py
+                                    (loads transforms from YAML)
 ```
 
 ### 2. Launch Sensor Kit
@@ -47,6 +50,13 @@ User provides actor names → Launch files remap topics → Autoware receives da
 CARLA Actor Topics → Topic Remapping → Preprocessing → Autoware Topics
 ```
 
+### 4. Unified Configuration Flow
+```
+YAML Config Files → sensor_config_loader.py → CARLA Spawner
+        ↓                                           ↓
+    URDF/Xacro  ←────── Same Source ──────→  Sensor Actors
+```
+
 ## Key Components
 
 ### Launch Files
@@ -55,16 +65,23 @@ CARLA Actor Topics → Topic Remapping → Preprocessing → Autoware Topics
 - **camera.launch.xml**: Manages camera topic remapping
 - **imu.launch.xml**: Remaps IMU data topics
 - **gnss.launch.xml**: Handles GNSS/GPS topic translation
+- **pointcloud_preprocessor.launch.py**: Python launch for composable pointcloud processing
 
 ### Configuration Files
-- **sensor_kit_calibration.yaml**: Sensor mounting positions and orientations
-- **sensors_calibration.yaml**: Individual sensor calibration parameters
+- **sensor_kit_calibration.yaml**: Individual sensor mounting positions relative to sensor_kit_base_link
+- **sensors_calibration.yaml**: Sensor kit base position relative to vehicle base_link
 - **imu_corrector.param.yaml**: IMU correction parameters
+- **concatenate_and_time_sync_node.param.yaml**: Multi-LiDAR synchronization settings
 - **diagnostic aggregator configs**: Health monitoring configurations
 
 ### URDF/Xacro Files
 - **sensor_kit.xacro**: Defines the complete sensor kit assembly
 - **sensors.xacro**: Individual sensor descriptions and transforms
+
+### Integration Scripts
+- **sensor_config_loader.py**: Loads sensor transforms from YAML for CARLA spawner
+- **carla.rs**: CARLA server management (start/stop/status)
+- **ros_env.sh**: ROS2 environment setup helper
 
 ## Interface Contract
 
@@ -84,3 +101,25 @@ CARLA Actor Topics → Topic Remapping → Preprocessing → Autoware Topics
 2. **Custom Preprocessing**: Insert additional nodes in the launch pipeline
 3. **Alternative Simulators**: Replace CARLA-specific remapping with other simulator interfaces
 4. **Calibration Updates**: Modify YAML files without changing launch logic
+5. **Coordinate System Conversion**: Extend sensor_config_loader.py for different coordinate systems
+6. **Multi-vehicle Support**: Parameterize sensor kit for multiple vehicle instances
+
+## Implementation Status
+
+### Completed
+- Launch file structure for all sensor types
+- YAML configuration files with sensor calibrations
+- URDF/xacro descriptions for sensor mounting
+- Topic remapping from CARLA to Autoware namespaces
+- Unified sensor configuration loader (sensor_config_loader.py)
+- CARLA server management scripts
+
+### In Progress
+- Integration with CARLA spawner using unified configurations
+- Comprehensive workflow automation script
+
+### Future Work
+- Camera driver integration (currently commented out)
+- Additional sensor types (radar, ultrasonic)
+- Performance optimization for high-frequency sensors
+- Cloud deployment support
