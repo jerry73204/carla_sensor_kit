@@ -1,17 +1,18 @@
 <launch>
   <arg name="launch_driver" default="true"/>
+  <arg name="vehicle_id" default="$(env VEHICLE_ID default)"/>
 
   <group>
     <push-ros-namespace namespace="imu"/>
 
-    <!-- <group>
+    <!-- Topic remapping from CARLA to Autoware sensor topics -->
+    <group>
       <push-ros-namespace namespace="tamagawa"/>
-      <node pkg="tamagawa_imu_driver" name="tag_serial_driver" exec="tag_serial_driver" if="$(var launch_driver)">
-        <remap from="imu/data_raw" to="imu_raw"/>
-        <param name="port" value="/dev/imu"/>
-        <param name="imu_frame_id" value="tamagawa/imu_link"/>
+      <node pkg="topic_tools" exec="relay" name="imu_relay">
+        <param name="input_topic" value="/carla/$(var vehicle_id)/imu"/>
+        <param name="output_topic" value="imu_raw"/>
       </node>
-    </group> -->
+    </group>
 
     <arg name="imu_raw_name" default="tamagawa/imu_raw"/>
     <arg name="imu_corrector_param_file" default="$(find-pkg-share carla_sensor_kit_description)/config/imu_corrector.param.yaml"/>

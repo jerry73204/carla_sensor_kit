@@ -1,27 +1,24 @@
 <launch>
   <arg name="launch_driver" default="true"/>
+  <arg name="vehicle_id" default="$(env VEHICLE_ID default)"/>
   <arg name="gnss_receiver" default="ublox" description="ublox(default) or septentrio"/>
 
   <group>
     <push-ros-namespace namespace="gnss"/>
 
+    <!-- Topic remapping from CARLA to Autoware sensor topics -->
+    <group>
+      <push-ros-namespace namespace="ublox"/>
+      <node pkg="topic_tools" exec="relay" name="gnss_relay">
+        <param name="input_topic" value="/carla/$(var vehicle_id)/gnss"/>
+        <param name="output_topic" value="nav_sat_fix"/>
+      </node>
+    </group>
+
     <!-- Switch topic name -->
     <let name="navsatfix_topic_name" value="ublox/nav_sat_fix" if="$(eval &quot;'$(var gnss_receiver)'=='ublox'&quot;)"/>
     <let name="navsatfix_topic_name" value="septentrio/nav_sat_fix" if="$(eval &quot;'$(var gnss_receiver)'=='septentrio'&quot;)"/>
     <let name="orientation_topic_name" value="/autoware_orientation"/>
-
-    <!-- Ublox Driver -->
-    <group if="$(eval &quot;'$(var gnss_receiver)'=='ublox'&quot;)">
-      <node pkg="ublox_gps" name="ublox" exec="ublox_gps_node" if="$(var launch_driver)" respawn="true" respawn_delay="1.0">
-        <remap from="~/fix" to="~/nav_sat_fix"/>
-        <param from="$(find-pkg-share ublox_gps)/c94_f9p_rover.yaml"/>
-      </node>
-    </group>
-
-    <!-- Septentrio GNSS Driver -->
-    <group if="$(eval &quot;'$(var launch_driver)' and '$(var gnss_receiver)'=='septentrio'&quot;)">
-      <include file="$(find-pkg-share septentrio_gnss_driver)/launch/mosaic_x5_rover.launch.xml"/>
-    </group>
 
     <!-- NavSatFix to MGRS Pose -->
     <include file="$(find-pkg-share autoware_gnss_poser)/launch/gnss_poser.launch.xml">
