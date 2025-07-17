@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'vehicle_spawner = carla_sensor_kit_utils.vehicle_spawner:main',
+            'vehicle_monitor = carla_sensor_kit_utils.vehicle_monitor:main',
         ],
     },
 )
