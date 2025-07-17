@@ -9,3 +9,8 @@
 *.pyc
 *pyo
 __pycache__/
+
+# colcon
+/build/
+/install/
+/log/
