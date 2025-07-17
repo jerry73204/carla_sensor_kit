@@ -66,7 +66,7 @@ enum Commands {
     Debug,
 }
 
-const CARLA_PATH: &str = "/home/aeon/repos/carla-ros-test/Carla-0.10.0-Linux-Shipping";
+const CARLA_PATH: &str = "/home/aeon/Downloads/Carla-0.10.0-Linux-Shipping";
 
 fn get_script_dir() -> PathBuf {
     // For rust-script, we need to use a fixed path relative to the project
