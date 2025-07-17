@@ -15,30 +15,6 @@
       </node>
     </group>
 
-    <group>
-      <push-ros-namespace namespace="left"/>
-      <node pkg="topic_tools" exec="relay" name="lidar_left_relay">
-        <param name="input_topic" value="/carla/$(var vehicle_id)/lidar_left"/>
-        <param name="output_topic" value="pointcloud_raw"/>
-      </node>
-    </group>
-
-    <group>
-      <push-ros-namespace namespace="right"/>
-      <node pkg="topic_tools" exec="relay" name="lidar_right_relay">
-        <param name="input_topic" value="/carla/$(var vehicle_id)/lidar_right"/>
-        <param name="output_topic" value="pointcloud_raw"/>
-      </node>
-    </group>
-
-    <group>
-      <push-ros-namespace namespace="rear"/>
-      <node pkg="topic_tools" exec="relay" name="lidar_rear_relay">
-        <param name="input_topic" value="/carla/$(var vehicle_id)/lidar_rear"/>
-        <param name="output_topic" value="pointcloud_raw"/>
-      </node>
-    </group>
-
     <!-- Pointcloud preprocessing for concatenation and filtering -->
     <include file="$(find-pkg-share carla_sensor_kit_launch)/launch/pointcloud_preprocessor.launch.py">
       <arg name="base_frame" value="base_link"/>

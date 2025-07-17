@@ -11,10 +11,11 @@
       <arg name="pointcloud_container_name" value="$(var pointcloud_container_name)"/>
     </include>
 
-    <!-- Camera Driver -->
-    <!-- <include file="$(find-pkg-share carla_sensor_kit_launch)/launch/camera.launch.xml">
-      <arg name="launch_driver" value="$(var launch_driver)" />
-    </include> -->
+    <!-- Camera Drivers -->
+    <include file="$(find-pkg-share carla_sensor_kit_launch)/launch/cameras.launch.xml">
+      <arg name="launch_driver" value="$(var launch_driver)"/>
+      <arg name="vehicle_id" value="$(var vehicle_id)"/>
+    </include>
 
     <!-- IMU Driver -->
     <include file="$(find-pkg-share carla_sensor_kit_launch)/launch/imu.launch.xml">

@@ -6,15 +6,12 @@
     <push-ros-namespace namespace="imu"/>
 
     <!-- Topic remapping from CARLA to Autoware sensor topics -->
-    <group>
-      <push-ros-namespace namespace="tamagawa"/>
-      <node pkg="topic_tools" exec="relay" name="imu_relay">
-        <param name="input_topic" value="/carla/$(var vehicle_id)/imu"/>
-        <param name="output_topic" value="imu_raw"/>
-      </node>
-    </group>
+    <node pkg="topic_tools" exec="relay" name="imu_relay">
+      <param name="input_topic" value="/carla/$(var vehicle_id)/imu"/>
+      <param name="output_topic" value="imu_raw"/>
+    </node>
 
-    <arg name="imu_raw_name" default="tamagawa/imu_raw"/>
+    <arg name="imu_raw_name" default="imu_raw"/>
     <arg name="imu_corrector_param_file" default="$(find-pkg-share carla_sensor_kit_description)/config/imu_corrector.param.yaml"/>
     <include file="$(find-pkg-share autoware_imu_corrector)/launch/imu_corrector.launch.xml">
       <arg name="input_topic" value="$(var imu_raw_name)"/>
