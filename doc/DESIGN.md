@@ -123,3 +123,125 @@ YAML Config Files → sensor_config_loader.py → CARLA Spawner
 - Additional sensor types (radar, ultrasonic)
 - Performance optimization for high-frequency sensors
 - Cloud deployment support
+
+## Dynamic Configuration System
+
+### Overview
+
+The dynamic configuration system generates ROS2 parameters and descriptions from CARLA simulation data at runtime without creating files on disk. This approach ensures configurations always match the actual simulated vehicle and sensor parameters.
+
+### Design Goals
+
+1. **Zero File Generation**: All configurations exist only in memory
+2. **Runtime Flexibility**: Parameters reflect actual CARLA state
+3. **Type Safety**: Strong typing for all parameter mappings
+4. **Backward Compatibility**: Maintains Autoware interface expectations
+
+### Parameter Extraction Architecture
+
+```
+CARLA Simulator
+    ↓
+Parameter Extraction Layer
+    ├── Vehicle Parameter Extractor
+    └── Sensor Parameter Extractor
+         ↓
+    Data Transformer
+    ├── Coordinate System Converter
+    ├── Unit Converter
+    └── Parameter Calculator
+         ↓
+ROS Description Generator
+    ├── YAML Parameter Dictionaries
+    └── URDF String Generation
+         ↓
+    Autoware-Compatible
+    Runtime Configuration
+```
+
+### Key Components
+
+#### 1. Vehicle Parameter Extractor
+
+Extracts from CARLA:
+- Vehicle bounding box dimensions
+- Physics control parameters (mass, drag, wheels)
+- Wheel configurations and positions
+
+Calculates derived parameters:
+- `wheel_base`: Distance between front and rear axles
+- `wheel_tread`: Distance between left and right wheels
+- Overhangs: Distances from wheels to vehicle edges
+
+#### 2. Sensor Parameter Extractor
+
+Extracts from CARLA sensor actors:
+- Camera: resolution, FOV, frame rate
+- LiDAR: channels, range, rotation frequency
+- IMU/GNSS: Update rates and noise parameters
+- Transform: Position and orientation relative to vehicle
+
+#### 3. Coordinate Transformer
+
+Handles conversions between:
+- CARLA (Unreal Engine): X-forward, Y-right, Z-up, left-handed
+- ROS (REP-103): X-forward, Y-left, Z-up, right-handed
+- Units: Centimeters to meters
+
+#### 4. Dynamic Configuration Generator
+
+Generates at runtime:
+- Vehicle parameter dictionaries
+- Sensor configuration mappings
+- Complete URDF as string (no file I/O)
+- Transform trees for tf2
+
+### Launch Integration
+
+```python
+def generate_dynamic_launch_setup(context):
+    # Connect to CARLA and find vehicle
+    vehicle = find_vehicle_by_role_name()
+
+    # Generate configurations
+    config_gen = DynamicConfigGenerator(world, vehicle)
+    vehicle_params = config_gen.generate_vehicle_parameters()
+    robot_description = config_gen.generate_urdf_string()
+
+    # Launch nodes with dynamic parameters
+    return [
+        Node(
+            package='robot_state_publisher',
+            parameters=[{'robot_description': robot_description}]
+        ),
+        Node(
+            package='carla_vehicle_interface',
+            parameters=[vehicle_params]
+        )
+    ]
+```
+
+### Parameter Mapping Strategy
+
+| CARLA Parameter | ROS Parameter | Transformation |
+|----------------|---------------|----------------|
+| bounding_box.extent | vehicle_height/width/length | * 2.0 (half-extents), cm to m |
+| wheels[i].radius | wheel_radius | cm to m |
+| wheels positions | wheel_base, wheel_tread | Calculate distances |
+| physics.mass | mass | Direct (kg) |
+| physics.max_steer_angle | max_steer_angle | deg to rad |
+
+### Benefits
+
+1. **Accuracy**: Parameters match exactly what's simulated
+2. **Flexibility**: Support any CARLA vehicle blueprint
+3. **Consistency**: Single source of truth (CARLA)
+4. **Maintainability**: No generated files to manage
+5. **Container-friendly**: Works in read-only filesystems
+
+### Implementation Guidelines
+
+1. **Error Handling**: Use defaults when CARLA data unavailable
+2. **Caching**: Cache extracted parameters to reduce API calls
+3. **Validation**: Ensure parameters within reasonable ranges
+4. **Thread Safety**: Protect CARLA access in multi-vehicle scenarios

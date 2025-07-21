@@ -227,3 +227,119 @@ The sensor configuration system ensures consistency between CARLA spawning and A
 - Automatic coordinate system conversion (ROS → CARLA)
 - Python sensor_config_loader.py provides transforms to CARLA spawner
 - Eliminates duplication between spawner and sensor kit configurations
+
+## Vehicle Interface Architecture
+
+### Overview
+
+The vehicle interface enables bidirectional communication between Autoware's control stack and CARLA's vehicle simulation, with dynamic configuration generation based on actual simulated vehicle parameters.
+
+### Vehicle Control Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Autoware Control Stack                        │
+│  (Motion Planning, Control Commands, State Monitoring)              │
+└─────────────────┬──────────────────────────┬───────────────────────┘
+                  │                          │
+                  │ Control Commands         │ Vehicle Status
+                  ▼                          ▲
+┌─────────────────────────────────────────────────────────────────────┐
+│                    ROS2 Vehicle Interface Layer                      │
+├─────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────┐  ┌──────────────────┐  ┌──────────────────┐  │
+│  │ Vehicle Control │  │ Vehicle Status   │  │ Dynamic Config   │  │
+│  │ Subscriber      │  │ Publisher        │  │ Generator        │  │
+│  └────────┬────────┘  └────────▲─────────┘  └────────▲─────────┘  │
+│           │                     │                      │            │
+│  ┌────────▼─────────────────────┴──────────────────────┴────────┐  │
+│  │              CARLA Vehicle Interface Node                     │  │
+│  │  • Control command translation                                │  │
+│  │  • State polling and publishing                               │  │
+│  │  • Parameter extraction from CARLA                            │  │
+│  └───────────────────────────┬───────────────────────────────────┘  │
+└──────────────────────────────┼──────────────────────────────────────┘
+                               │
+                               │ CARLA Python API
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                         CARLA Simulator                              │
+│  ┌─────────────────┐  ┌──────────────────┐  ┌──────────────────┐  │
+│  │ Vehicle Actor   │  │ Physics Engine   │  │ Sensor Actors    │  │
+│  │ • Blueprints    │  │ • Vehicle dynamics│  │ • Cameras        │  │
+│  │ • Attributes    │  │ • Collision      │  │ • LiDAR          │  │
+│  │ • Physics       │  │ • Environment    │  │ • IMU/GNSS       │  │
+│  └─────────────────┘  └──────────────────┘  └──────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Vehicle Interface Components
+
+#### 1. CARLA Vehicle Interface Node
+
+**Purpose**: Bridge between Autoware control commands and CARLA vehicle control
+
+**Subscribers**:
+- `/control/command/control_cmd` (AckermannControlCommand)
+- `/control/command/gear_cmd` (GearCommand)
+- `/control/command/turn_indicators_cmd` (TurnIndicatorsCommand)
+- `/control/command/hazard_lights_cmd` (HazardLightsCommand)
+
+**Publishers**:
+- `/vehicle/status/velocity_status` (VelocityReport)
+- `/vehicle/status/steering_status` (SteeringReport)
+- `/vehicle/status/gear_status` (GearReport)
+- `/vehicle/status/control_mode` (ControlModeReport)
+
+#### 2. Dynamic Configuration Generator
+
+**Purpose**: Extract vehicle and sensor parameters from CARLA and generate ROS configurations at runtime
+
+**Components**:
+- Parameter Extractor: Query CARLA vehicle physics and dimensions
+- Parameter Transformer: Convert CARLA to ROS coordinates and units
+- Configuration Publisher: Generate parameter dictionaries and URDF
+
+### Dynamic Configuration Flow
+
+```
+1. CARLA vehicle spawned with sensors
+2. Launch system queries vehicle actor
+3. Parameter extractor reads:
+   - Vehicle bounding box
+   - Physics control parameters
+   - Sensor configurations
+4. Configuration generator creates:
+   - Vehicle parameter dictionary
+   - Sensor parameter dictionaries
+   - URDF description string
+5. Nodes launched with dynamic parameters
+```
+
+### Multi-Vehicle Support
+
+```
+/vehicle_1/
+├── carla_vehicle_interface
+├── robot_state_publisher
+└── vehicle parameters
+
+/vehicle_2/
+├── carla_vehicle_interface
+├── robot_state_publisher
+└── vehicle parameters
+```
+
+Each vehicle instance has:
+- Unique node namespace
+- Independent parameter set
+- Separate control/status topics
+- Own URDF description
+
+### Key Vehicle Interface Design Decisions
+
+1. **Dynamic Configuration**: Generate all ROS configurations from CARLA at runtime without files
+2. **Direct API Integration**: Vehicle interface uses CARLA Python API directly
+3. **Polling-based Updates**: Timer-based state polling for predictable timing
+4. **Namespace Isolation**: ROS namespaces for multi-vehicle support
+5. **Graceful Degradation**: Handle CARLA disconnection without crashing

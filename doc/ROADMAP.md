@@ -41,7 +41,91 @@ This document outlines the development phases for the CARLA sensor kit launch pr
   - [x] Configure test coverage reporting
   - [x] Create initial test files for topic remapping and sensor poses
 
-## Phase 2: Sensor Integration
+## Phase 2: Dynamic Configuration & Vehicle Interface
+**Goal**: Implement dynamic sensor/vehicle configuration from CARLA and vehicle control interface
+
+### Dynamic Sensor Configuration
+- [ ] Implement sensor parameter extraction from CARLA
+  - [ ] Create SensorParameterExtractor class
+  - [ ] Extract camera specs (resolution, FOV, FPS)
+  - [ ] Extract LiDAR specs (channels, range, frequency)
+  - [ ] Extract sensor transforms from CARLA attachments
+- [ ] Remove old sensor configuration code
+  - [ ] Remove hardcoded sensor specs from vehicle_spawner.py
+  - [ ] Delete redundant sensor config loading code
+  - [ ] Update spawn scripts to use dynamic extraction
+- [ ] Implement runtime parameter generation
+  - [ ] Create sensor parameter dictionaries at runtime
+  - [ ] Generate sensor launch configurations dynamically
+  - [ ] Pass parameters to sensor driver nodes
+- [ ] Testing tasks:
+  - [ ] Unit tests for parameter extraction
+  - [ ] Integration tests for dynamic configuration
+  - [ ] Validation against hardcoded values
+
+### Dynamic Vehicle Configuration
+- [ ] Implement vehicle parameter extraction
+  - [ ] Create VehicleParameterExtractor class
+  - [ ] Extract vehicle dimensions from bounding box
+  - [ ] Extract wheel parameters and physics
+  - [ ] Calculate derived parameters (overhangs, wheel base)
+- [ ] Implement URDF generation
+  - [ ] Create DynamicURDFGenerator class
+  - [ ] Generate URDF string from vehicle parameters
+  - [ ] Include sensor mounting points
+  - [ ] No file I/O - all in memory
+- [ ] Testing tasks:
+  - [ ] Unit tests for URDF generation
+  - [ ] Validation of generated URDF
+  - [ ] TF tree consistency tests
+
+### Vehicle Interface Implementation
+- [ ] Create CARLA vehicle interface node
+  - [ ] Implement CARLAVehicleInterface ROS2 node
+  - [ ] Subscribe to Autoware control commands
+  - [ ] Translate commands to CARLA VehicleControl
+  - [ ] Apply control via CARLA Python API
+- [ ] Implement vehicle state publishing
+  - [ ] Poll vehicle state from CARLA
+  - [ ] Publish velocity status
+  - [ ] Publish steering status
+  - [ ] Publish gear and control mode
+- [ ] Add error handling
+  - [ ] Handle CARLA connection loss
+  - [ ] Implement reconnection logic
+  - [ ] Publish degraded status on errors
+- [ ] Testing tasks:
+  - [ ] Control command translation tests
+  - [ ] State publishing accuracy tests
+  - [ ] Error recovery tests
+  - [ ] Multi-vehicle isolation tests
+
+### Launch Integration
+- [ ] Create dynamic launch system
+  - [ ] Implement OpaqueFunction launch setup
+  - [ ] Query CARLA for vehicle/sensor data
+  - [ ] Generate parameters at launch time
+  - [ ] Create nodes with dynamic configs
+- [ ] Update existing launch files
+  - [ ] Modify vehicle.launch.xml
+  - [ ] Add vehicle interface to sensing.launch.xml
+  - [ ] Remove static configuration dependencies
+- [ ] Testing tasks:
+  - [ ] Launch file integration tests
+  - [ ] Parameter propagation tests
+  - [ ] Multi-vehicle launch tests
+
+### Migration & Cleanup
+- [ ] Phase out old configuration system
+  - [ ] Update documentation
+  - [ ] Remove deprecated scripts
+  - [ ] Clean up unused YAML files
+- [ ] Backward compatibility
+  - [ ] Add migration guide
+  - [ ] Support legacy launch arguments
+  - [ ] Deprecation warnings
+
+## Phase 3: Sensor Integration
 **Goal**: Full sensor suite working with accurate data transformation
 
 ### LiDAR Pipeline
@@ -75,7 +159,7 @@ This document outlines the development phases for the CARLA sensor kit launch pr
 - [ ] Create sensor pose validation tests
 - [ ] Add sensor data quality tests
 
-## Phase 3: Calibration & Transforms
+## Phase 4: Calibration & Transforms
 **Goal**: Accurate sensor positioning and calibration
 
 - [ ] Create sensor mounting configuration UI/tool
@@ -88,7 +172,7 @@ This document outlines the development phases for the CARLA sensor kit launch pr
   - [ ] Add transform accuracy validation
   - [ ] Create calibration regression tests
 
-## Phase 4: Multi-Vehicle Support
+## Phase 5: Multi-Vehicle Support
 **Goal**: Support multiple vehicles in same simulation
 
 - [ ] Extend spawner for multiple vehicles
@@ -101,7 +185,7 @@ This document outlines the development phases for the CARLA sensor kit launch pr
   - [ ] Performance tests with multiple vehicles
   - [ ] Resource usage monitoring tests
 
-## Phase 5: Advanced Features
+## Phase 6: Advanced Features
 **Goal**: Production-ready features and optimizations
 
 ### Performance Optimization
@@ -130,7 +214,7 @@ This document outlines the development phases for the CARLA sensor kit launch pr
 - [ ] Add V2X communication simulation
 - [ ] Support custom sensor types
 
-## Phase 6: Testing & Validation
+## Phase 7: Testing & Validation
 **Goal**: Comprehensive testing framework
 
 ### Core Testing Implementation
@@ -174,7 +258,7 @@ This document outlines the development phases for the CARLA sensor kit launch pr
 - [ ] Create performance regression detection
 - [ ] Document test procedures and guidelines
 
-## Phase 7: Documentation & Training
+## Phase 8: Documentation & Training
 **Goal**: Complete user documentation and examples
 
 - [ ] Create user guide with screenshots
@@ -184,7 +268,7 @@ This document outlines the development phases for the CARLA sensor kit launch pr
 - [ ] Add API documentation
 - [ ] Create sensor configuration guide
 
-## Phase 8: Community Release
+## Phase 9: Community Release
 **Goal**: Open source release preparation
 
 - [ ] Code cleanup and refactoring
@@ -215,22 +299,27 @@ This document outlines the development phases for the CARLA sensor kit launch pr
 
 ## Version Milestones
 
-### v0.1.0 (Phase 1-2)
+### v0.1.0 (Phase 1)
 - Basic vehicle spawning
 - Core sensor support
 - Manual configuration
 
-### v0.2.0 (Phase 3-4)
+### v0.2.0 (Phase 2-3)
+- Dynamic configuration system
+- Vehicle interface
+- Full sensor integration
+
+### v0.3.0 (Phase 4-5)
 - Calibration tools
 - Multi-vehicle support
 - Basic diagnostics
 
-### v0.3.0 (Phase 5-6)
+### v0.4.0 (Phase 6-7)
 - Performance optimizations
 - Advanced sensors
 - Test framework
 
-### v1.0.0 (Phase 7-8)
+### v1.0.0 (Phase 8-9)
 - Production ready
 - Full documentation
 - Community release
