@@ -1,0 +1,5 @@
+recursive-include carla_sensor_kit_utils/templates *
+include package.xml
+include resource/*
+include config/*.yaml
+include scripts/*

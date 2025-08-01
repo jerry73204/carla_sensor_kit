@@ -1,0 +1,94 @@
+<launch>
+  <arg name="launch_driver" default="true"/>
+  <arg name="vehicle_id" default="{{ vehicle.role_name | default('default') }}"/>
+  <arg name="gnss_receiver" default="ublox" description="ublox(default) or septentrio"/>
+  <arg name="coordinate_system" default="mgrs" description="Coordinate system: mgrs, utm, or wgs84"/>
+  
+  <group>
+    <push-ros-namespace namespace="gnss"/>
+    
+{%- if 'gnss' in sensors %}
+{%- for gnss in sensors.gnss %}
+    <!-- GNSS: {{ gnss.name }} -->
+    <group>
+      <push-ros-namespace namespace="{{ gnss.name }}"/>
+      
+      <!-- Topic remapping from CARLA to Autoware sensor topics -->
+      <node pkg="topic_tools" exec="relay" name="{{ gnss.name }}_relay" if="$(var launch_driver)">
+        <param name="input_topic" value="/carla/$(var vehicle_id)/{{ gnss.name }}"/>
+        <param name="output_topic" value="nav_sat_fix"/>
+        <param name="type" value="sensor_msgs/msg/NavSatFix"/>
+        <param name="reliability" value="reliable"/>
+      </node>
+      
+      <!-- GNSS frame transform -->
+      <node pkg="tf2_ros" exec="static_transform_publisher" name="{{ gnss.name }}_tf_publisher"
+            args="{{ gnss.transform.x | default(0) }} {{ gnss.transform.y | default(0) }} {{ gnss.transform.z | default(0) }} 
+                  {{ gnss.transform.roll | default(0) }} {{ gnss.transform.pitch | default(0) }} {{ gnss.transform.yaw | default(0) }} 
+                  base_link {{ gnss.name }}_base_link">
+        <param name="use_sim_time" value="true"/>
+      </node>
+    </group>
+{%- endfor %}
+
+    <!-- Use first GNSS sensor as primary -->
+{%- set primary_gnss = sensors.gnss[0] %}
+    
+    <!-- Switch topic name based on receiver type -->
+    <let name="navsatfix_topic_name" value="{{ primary_gnss.name }}/nav_sat_fix" if="$(eval &quot;'$(var gnss_receiver)'=='ublox'&quot;)"/>
+    <let name="navsatfix_topic_name" value="{{ primary_gnss.name }}/nav_sat_fix" if="$(eval &quot;'$(var gnss_receiver)'=='septentrio'&quot;)"/>
+    <let name="orientation_topic_name" value="/autoware_orientation"/>
+    
+    <!-- NavSatFix to MGRS/UTM Pose -->
+    <include file="$(find-pkg-share autoware_gnss_poser)/launch/gnss_poser.launch.xml">
+      <arg name="input_topic_fix" value="$(var navsatfix_topic_name)"/>
+      <arg name="input_topic_orientation" value="$(var orientation_topic_name)"/>
+      
+      <arg name="output_topic_gnss_pose" value="pose"/>
+      <arg name="output_topic_gnss_pose_cov" value="pose_with_covariance"/>
+      <arg name="output_topic_gnss_fixed" value="fixed"/>
+      
+      <arg name="use_gnss_ins_orientation" value="true"/>
+      <arg name="coordinate_system" value="$(var coordinate_system)"/>
+    </include>
+    
+    <!-- Additional GNSS processing nodes -->
+    <group if="$(eval &quot;'$(var coordinate_system)' == 'utm'&quot;)">
+      <!-- UTM converter -->
+      <node pkg="gps_common" exec="utm_odometry_node" name="utm_converter">
+        <remap from="fix" to="$(var navsatfix_topic_name)"/>
+        <remap from="odom" to="utm_odom"/>
+        <param name="frame_id" value="utm"/>
+        <param name="child_frame_id" value="base_link"/>
+      </node>
+    </group>
+    
+{%- if sensors.gnss | length > 1 %}
+    <!-- Multi-GNSS fusion (if multiple GNSS sensors) -->
+    <group>
+      <node pkg="robot_localization" exec="navsat_transform_node" name="gnss_fusion">
+        <rosparam subst_value="true">
+          frequency: 10
+          delay: 0.0
+          magnetic_declination_radians: 0.0
+          yaw_offset: 0.0
+          zero_altitude: true
+          broadcast_utm_transform: true
+          publish_filtered_gps: true
+          use_odometry_yaw: false
+          wait_for_datum: false
+        </rosparam>
+{%- for gnss in sensors.gnss %}
+        <remap from="gps/fix_{{ loop.index }}" to="{{ gnss.name }}/nav_sat_fix"/>
+{%- endfor %}
+        <remap from="gps/filtered" to="filtered_nav_sat_fix"/>
+        <remap from="odometry/filtered" to="/localization/kinematic_state"/>
+      </node>
+    </group>
+{%- endif %}
+{%- else %}
+    <!-- No GNSS sensors configured -->
+    <log message="Warning: No GNSS sensors configured in sensor kit" severity="warn"/>
+{%- endif %}
+  </group>
+</launch>

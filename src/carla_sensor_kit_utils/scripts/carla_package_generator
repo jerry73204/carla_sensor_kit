@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+"""
+Wrapper script for carla_package_generator that ensures proper PYTHONPATH setup.
+"""
+import os
+import sys
+
+# Check if running in ROS2 environment
+if 'AMENT_PREFIX_PATH' in os.environ:
+    # ROS2 environment is already set up
+    pass
+else:
+    # Standalone execution - set up Python path
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    install_dir = os.path.join(script_dir, '..', '..', '..')
+    python_path = os.path.join(install_dir, 'carla_sensor_kit_utils', 'lib', 'python3.10', 'site-packages')
+    if os.path.exists(python_path):
+        sys.path.insert(0, python_path)
+
+# Import and run the main function
+from carla_sensor_kit_utils.package_generator import main
+
+if __name__ == '__main__':
+    sys.exit(main())

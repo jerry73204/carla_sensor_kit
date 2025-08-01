@@ -1,0 +1,31 @@
+<launch>
+  <arg name="launch_driver" default="true"/>
+  <arg name="vehicle_id" default="{{ vehicle.role_name | default('default') }}"/>
+  <arg name="pointcloud_container_name" default="pointcloud_container"/>
+
+  <group>
+    <push-ros-namespace namespace="lidar"/>
+
+{%- if 'lidar' in sensors %}
+    <!-- Topic remapping from CARLA to Autoware sensor topics -->
+{%- for lidar in sensors.lidar %}
+    <group>
+      <push-ros-namespace namespace="{{ lidar.name.replace('velodyne_', '').replace('lidar_', '') }}"/>
+      <node pkg="topic_tools" exec="relay" name="{{ lidar.name }}_relay">
+        <param name="input_topic" value="/carla/$(var vehicle_id)/{{ lidar.name }}"/>
+        <param name="output_topic" value="pointcloud_raw"/>
+      </node>
+    </group>
+{%- endfor %}
+{%- endif %}
+
+    <!-- Pointcloud preprocessing for concatenation and filtering -->
+    <include file="$(find-pkg-share {{ sensor_kit_name }}_launch)/launch/pointcloud_preprocessor.launch.py">
+      <arg name="base_frame" value="base_link"/>
+      <arg name="use_intra_process" value="true"/>
+      <arg name="use_multithread" value="true"/>
+      <arg name="use_concat_filter" value="{{ 'true' if sensors.lidar | length > 1 else 'false' }}"/>
+      <arg name="pointcloud_container_name" value="$(var pointcloud_container_name)"/>
+    </include>
+  </group>
+</launch>

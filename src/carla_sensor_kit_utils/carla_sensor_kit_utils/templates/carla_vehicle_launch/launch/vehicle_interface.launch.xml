@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <!-- Vehicle identification -->
+  <arg name="vehicle_id" default="$(env VEHICLE_ID default)"/>
+  <arg name="vehicle_role_name" default="ego_vehicle"/>
+  
+  <!-- CARLA connection parameters -->
+  <arg name="carla_host" default="localhost"/>
+  <arg name="carla_port" default="2000"/>
+  
+  <!-- Configuration options -->
+  <arg name="use_sim_time" default="true"/>
+  <arg name="use_dynamic_config" default="true"/>
+  
+  <!-- Include the Python launch file for dynamic configuration -->
+  <include file="$(find-pkg-share carla_vehicle_launch)/launch/vehicle_interface.launch.py">
+    <arg name="vehicle_role_name" value="$(var vehicle_role_name)"/>
+    <arg name="carla_host" value="$(var carla_host)"/>
+    <arg name="carla_port" value="$(var carla_port)"/>
+    <arg name="use_sim_time" value="$(var use_sim_time)"/>
+    <arg name="use_dynamic_config" value="$(var use_dynamic_config)"/>
+  </include>
+</launch>

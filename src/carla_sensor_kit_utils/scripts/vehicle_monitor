@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+# Wrapper script for vehicle_monitor
+import sys
+import os
+
+# Check if running from ROS2 environment
+if 'AMENT_PREFIX_PATH' in os.environ:
+    # Already in ROS2 environment, module should be importable
+    pass
+else:
+    # Add the install path to Python path
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    install_dir = os.path.join(script_dir, '..', '..', '..')
+    python_path = os.path.join(install_dir, 'carla_sensor_kit_utils', 'lib', 'python3.10', 'site-packages')
+    if os.path.exists(python_path):
+        sys.path.insert(0, python_path)
+
+from carla_sensor_kit_utils.vehicle_monitor import main
+
+if __name__ == '__main__':
+    sys.exit(main())

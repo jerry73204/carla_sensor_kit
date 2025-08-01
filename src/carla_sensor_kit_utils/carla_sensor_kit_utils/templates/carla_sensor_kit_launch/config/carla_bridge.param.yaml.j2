@@ -1,0 +1,43 @@
+/**:
+  ros__parameters:
+    # CARLA connection parameters
+    carla_host: "{{ carla_host | default('localhost') }}"
+    carla_port: {{ carla_port }}
+    vehicle_role_name: "{{ vehicle.role_name | default('ego_vehicle') }}"
+    
+    # Bridge configuration
+    use_sim_time: false
+    
+    # Sensor frame IDs mapping
+    sensor_frame_ids:
+{%- for sensor_type, sensor_list in sensors.items() %}
+{%- for sensor in sensor_list %}
+      {{ sensor.name }}: "{{ sensor.frame_id }}"
+{%- endfor %}
+{%- endfor %}
+    
+    # Topic remapping configuration
+    topic_config:
+      lidar:
+        input_topic: "/carla/{{ vehicle.role_name }}/lidar"
+        output_topic: "/sensing/lidar/top/pointcloud_raw"
+      camera_front:
+        input_topic: "/carla/{{ vehicle.role_name }}/camera_front"
+        output_topic: "/sensing/camera/camera_front/image_raw"
+      camera_rear:
+        input_topic: "/carla/{{ vehicle.role_name }}/camera_rear"
+        output_topic: "/sensing/camera/camera_rear/image_raw"
+      imu:
+        input_topic: "/carla/{{ vehicle.role_name }}/imu"
+        output_topic: "/sensing/imu/imu_data"
+      gnss:
+        input_topic: "/carla/{{ vehicle.role_name }}/gnss"
+        output_topic: "/sensing/gnss/gnss_data"
+      velocity:
+        output_topic: "/vehicle/status/velocity_status"
+    
+    # QoS settings
+    qos:
+      reliability: "best_effort"
+      durability: "volatile"
+      depth: 1

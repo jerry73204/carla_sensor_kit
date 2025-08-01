@@ -1,0 +1,12 @@
+sensor_kit_base_link:
+{% for sensor_type, sensor_list in sensors.items() -%}
+{%- for sensor in sensor_list %}
+  {{ sensor.frame_id }}:
+    x: {{ sensor.transform.x | default(0) }}
+    y: {{ sensor.transform.y | default(0) }}
+    z: {{ sensor.transform.z | default(0) }}
+    roll: {{ sensor.transform.roll | default(0) }}
+    pitch: {{ sensor.transform.pitch | default(0) }}
+    yaw: {{ sensor.transform.yaw | default(0) }}
+{% endfor -%}
+{%- endfor %}

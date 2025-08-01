@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="config_file" default="$(find-pkg-share {{ sensor_kit_name }}_launch)/config/carla_bridge.param.yaml" description="Path to the CARLA bridge config file"/>
+  <arg name="launch_carla_bridge" default="true" description="Launch CARLA to ROS2 bridge"/>
+  
+  <!-- CARLA to ROS2 Bridge -->
+  <group if="$(var launch_carla_bridge)">
+    <node pkg="carla_sensor_kit_utils" exec="carla_ros_bridge" name="carla_sensor_bridge" output="screen">
+      <param from="$(var config_file)"/>
+    </node>
+  </group>
+</launch>

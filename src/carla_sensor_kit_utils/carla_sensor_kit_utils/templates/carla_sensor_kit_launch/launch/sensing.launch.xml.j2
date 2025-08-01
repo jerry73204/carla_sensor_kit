@@ -1,0 +1,84 @@
+<launch>
+  <arg name="launch_driver" default="true" description="do launch driver"/>
+  <arg name="launch_carla_bridge" default="true" description="Launch CARLA to ROS2 bridge"/>
+  <arg name="pointcloud_container_name" default="pointcloud_container"/>
+  <arg name="vehicle_id" default="{{ vehicle.role_name | default('default') }}"/>
+  <arg name="use_sim_time" default="true"/>
+  
+  <group>
+    <!-- CARLA to ROS2 Bridge -->
+    <include file="$(find-pkg-share {{ sensor_kit_name }}_launch)/launch/carla_bridge.launch.xml">
+      <arg name="launch_carla_bridge" value="$(var launch_carla_bridge)"/>
+    </include>
+    
+    <!-- Common nodes -->
+    <include file="$(find-pkg-share ros2_ouster)/launch/ouster_launch.launch.xml" if="false"/>
+    
+{%- if 'lidar' in sensors and sensors.lidar %}
+    <!-- LiDAR Driver -->
+    <include file="$(find-pkg-share {{ sensor_kit_name }}_launch)/launch/lidar.launch.xml">
+      <arg name="launch_driver" value="$(var launch_driver)"/>
+      <arg name="vehicle_id" value="$(var vehicle_id)"/>
+      <arg name="pointcloud_container_name" value="$(var pointcloud_container_name)"/>
+    </include>
+{%- endif %}
+
+{%- if 'camera' in sensors and sensors.camera %}
+    <!-- Camera Drivers -->
+    <include file="$(find-pkg-share {{ sensor_kit_name }}_launch)/launch/camera.launch.xml">
+      <arg name="launch_driver" value="$(var launch_driver)"/>
+      <arg name="vehicle_id" value="$(var vehicle_id)"/>
+    </include>
+{%- endif %}
+
+{%- if 'imu' in sensors and sensors.imu %}
+    <!-- IMU Driver -->
+    <include file="$(find-pkg-share {{ sensor_kit_name }}_launch)/launch/imu.launch.xml">
+      <arg name="launch_driver" value="$(var launch_driver)"/>
+      <arg name="vehicle_id" value="$(var vehicle_id)"/>
+    </include>
+{%- endif %}
+
+{%- if 'gnss' in sensors and sensors.gnss %}
+    <!-- GNSS Driver -->
+    <include file="$(find-pkg-share {{ sensor_kit_name }}_launch)/launch/gnss.launch.xml">
+      <arg name="launch_driver" value="$(var launch_driver)"/>
+      <arg name="vehicle_id" value="$(var vehicle_id)"/>
+    </include>
+{%- endif %}
+
+{%- if 'radar' in sensors and sensors.radar %}
+    <!-- Radar Driver -->
+    <include file="$(find-pkg-share {{ sensor_kit_name }}_launch)/launch/radar.launch.xml" if="false">
+      <arg name="launch_driver" value="$(var launch_driver)"/>
+      <arg name="vehicle_id" value="$(var vehicle_id)"/>
+    </include>
+{%- endif %}
+
+    <!-- Vehicle Velocity Converter -->
+    <include file="$(find-pkg-share autoware_vehicle_velocity_converter)/launch/vehicle_velocity_converter.launch.xml">
+      <arg name="input_vehicle_velocity_topic" value="/vehicle/status/velocity_status"/>
+      <arg name="output_twist_with_covariance" value="/sensing/vehicle_velocity_converter/twist_with_covariance"/>
+    </include>
+    
+    <!-- Diagnostics Aggregator -->
+    <include file="$(find-pkg-share diagnostic_aggregator)/launch/aggregator.launch.xml">
+      <arg name="analyzers_path" value="$(find-pkg-share {{ sensor_kit_name }}_launch)/config/diagnostic_aggregator/sensor_kit.param.yaml"/>
+    </include>
+    
+    <!-- Sensor Monitor -->
+    <group if="$(var launch_driver)">
+      <executable cmd="ros2 run {{ sensor_kit_name }}_launch sensor_monitor.py" name="sensor_monitor" output="screen">
+        <param name="sensor_config" value="{
+{%- for sensor_type, sensor_list in sensors.items() %}
+          '{{ sensor_type }}': [
+{%- for sensor in sensor_list %}
+            '{{ sensor.name }}'{{ ',' if not loop.last }}
+{%- endfor %}
+          ]{{ ',' if not loop.last }}
+{%- endfor %}
+        }"/>
+      </executable>
+    </group>
+  </group>
+</launch>

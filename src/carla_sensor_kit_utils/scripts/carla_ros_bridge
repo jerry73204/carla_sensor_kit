@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+import os
+import sys
+
+# Add the package to Python path
+package_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..')
+if package_path not in sys.path:
+    sys.path.insert(0, package_path)
+
+# Import and run the main function
+from carla_sensor_kit_utils.carla_ros_bridge import main
+
+if __name__ == '__main__':
+    main()
